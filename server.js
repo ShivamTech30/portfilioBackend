@@ -52,8 +52,14 @@ app.post('/api/gemini', async (req, res) => {
   }
 });
 
-// Start the server
-app.listen(PORT, () => {
-  console.log(`Backend server is running on http://localhost:${PORT}`);
-  console.log(`Send POST requests to http://localhost:${PORT}/api/gemini`);
-});
+// Start the server (Only in local development, Vercel handles this in production)
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`Backend server is running on http://localhost:${PORT}`);
+    console.log(`Send POST requests to http://localhost:${PORT}/api/gemini`);
+  });
+}
+
+// Export the app for Vercel Serverless Function
+module.exports = app;
+
