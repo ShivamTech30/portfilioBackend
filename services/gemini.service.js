@@ -35,32 +35,44 @@ const generateChatResponse = async (prompt) => {
     ]
   };
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${GEMINI_API_KEY}`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': '*/*'
-      },
-      body: JSON.stringify(bodyContent),
+  const models = ['gemini-3-flash-preview', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
+  let lastError;
+
+  for (const model of models) {
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': '*/*'
+          },
+          body: JSON.stringify(bodyContent),
+          signal: AbortSignal.timeout(12000)
+        }
+      );
+
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error(`Gemini API Error with ${model} (${response.status}):`, errText);
+        lastError = new Error(`Gemini API error (${response.status}) on ${model}`);
+        continue;
+      }
+
+      const data = await response.json();
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (text) {
+        return text;
+      }
+    } catch (err) {
+      console.error(`Attempt with ${model} failed:`, err.message);
+      lastError = err;
     }
-  );
-
-  if (!response.ok) {
-    const errText = await response.text();
-    console.error(`Gemini API Error (${response.status}):`, errText);
-    throw new Error(`Gemini API error: ${response.status}`);
   }
 
-  const data = await response.json();
-  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-  if (!text) {
-    throw new Error('Unexpected response format from Gemini');
-  }
-
-  return text;
+  throw lastError || new Error('Unexpected response format from Gemini');
 };
 
 module.exports = {
