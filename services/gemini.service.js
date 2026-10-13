@@ -35,7 +35,7 @@ const generateChatResponse = async (prompt) => {
     ]
   };
 
-  const models = ['gemini-3-flash-preview', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
+  const models = ['gemini-3.1-flash-lite', 'gemini-3.1-flash-lite-preview', 'gemini-3-flash-preview', 'gemini-flash-latest'];
   let lastError;
 
   for (const model of models) {
@@ -49,7 +49,7 @@ const generateChatResponse = async (prompt) => {
             'Accept': '*/*'
           },
           body: JSON.stringify(bodyContent),
-          signal: AbortSignal.timeout(12000)
+          signal: AbortSignal.timeout(7000)
         }
       );
 
